@@ -9,20 +9,35 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Download Render service logs')
     parser.add_argument('--auth-token', required=True, help='Render API authentication token')
     parser.add_argument('--service-id', required=True, help='Render service ID')
+    parser.add_argument('--date', help='Date to download logs for in YYYYMMDD format (defaults to last 24 hours)')
     return parser.parse_args()
 
 # Get command line arguments
 args = parse_args()
 
 # Configuration
-current_date = datetime.utcnow().strftime('%Y%m%d')
-OUTPUT_FILE = f"{current_date}_render_logs.txt"
 SERVICE_ID = args.service_id
 AUTH_TOKEN = args.auth_token
 
-# Calculate time range (last 12 hours)
-end_time = datetime.utcnow().isoformat() + "Z"
-start_time = (datetime.utcnow() - timedelta(hours=12)).isoformat() + "Z"
+# Calculate time range
+if args.date:
+    # Parse the date argument
+    try:
+        target_date = datetime.strptime(args.date, '%Y%m%d')
+        # Set time range for the entire specified day (UTC)
+        start_time = target_date.isoformat() + "Z"
+        end_time = (target_date + timedelta(days=1)).isoformat() + "Z"
+        current_date = args.date
+    except ValueError:
+        print("Error: Date must be in YYYYMMDD format")
+        exit(1)
+else:
+    # Default: last 24 hours
+    end_time = datetime.utcnow().isoformat() + "Z"
+    start_time = (datetime.utcnow() - timedelta(hours=24)).isoformat() + "Z"
+    current_date = datetime.utcnow().strftime('%Y%m%d')
+
+OUTPUT_FILE = f"{current_date}_render_logs.txt"
 
 # GraphQL query
 query = """
@@ -47,7 +62,7 @@ query logs($query: LogQueryInput!) {
 # Headers
 headers = {
     "Content-Type": "application/json",
-    "Authorization": f"Bearer {AUTH_TOKEN}"
+    "Authorization": AUTH_TOKEN if AUTH_TOKEN.startswith("Bearer ") else f"Bearer {AUTH_TOKEN}"
 }
 
 def fetch_logs(start=None, end=None):
@@ -113,6 +128,9 @@ def fetch_logs(start=None, end=None):
 
 # Run the script
 if __name__ == "__main__":
-    print(f"Downloading logs for the last 12 hours to {OUTPUT_FILE}")
+    if args.date:
+        print(f"Downloading logs for {args.date} to {OUTPUT_FILE}")
+    else:
+        print(f"Downloading logs for the last 24 hours to {OUTPUT_FILE}")
     fetch_logs(start=start_time, end=end_time)
     print("Download complete!")

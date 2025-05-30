@@ -1,6 +1,6 @@
 # Render Logs Downloader
 
-This script downloads logs from your Render.com service for the last 12 hours and saves them to a dated log file.
+This script downloads logs from your Render.com service for the last 24 hours by default and saves them to a dated log file. You can also specify a specific date to download logs for.
 
 ## Prerequisites
 
@@ -25,23 +25,34 @@ This script downloads logs from your Render.com service for the last 12 hours an
 ### Using uv run (recommended)
 
 ```bash
+# Download logs for the last 24 hours
 uv run download_render_logs.py --auth-token "your-auth-token" --service-id "your-service-id"
+
+# Download logs for a specific date
+uv run download_render_logs.py --auth-token "your-auth-token" --service-id "your-service-id" --date 20240522
 ```
 
 ### Example
 
 ```bash
-# Using Python
+# Download last 24 hours using Python
 python3 download_render_logs.py --auth-token "Bearer rnd_abc123..." --service-id "srv-xyz789..."
 
-# Using uv
+# Download specific date using Python
+python3 download_render_logs.py --auth-token "Bearer rnd_abc123..." --service-id "srv-xyz789..." --date 20240522
+
+# Download last 24 hours using uv
 uv run download_render_logs.py --auth-token "Bearer rnd_abc123..." --service-id "srv-xyz789..."
+
+# Download specific date using uv
+uv run download_render_logs.py --auth-token "Bearer rnd_abc123..." --service-id "srv-xyz789..." --date 20240522
 ```
 
 ## Output
 
-The script will create a log file named with the current date in the format `YYYYMMDD_render_logs.txt`. For example:
-- `20240522_render_logs.txt` for May 22, 2024
+The script will create a log file named with the date in the format `YYYYMMDD_render_logs.txt`. For example:
+- `20240522_render_logs.txt` for May 22, 2024 (when using --date 20240522)
+- Current date when downloading the last 24 hours
 
 The logs will include:
 - Timestamp
@@ -51,7 +62,8 @@ The logs will include:
 
 ## Notes
 
-- The script fetches logs for the last 12 hours by default
+- The script fetches logs for the last 24 hours by default
+- Use the --date parameter to download logs for a specific day in YYYYMMDD format
 - Logs are fetched in batches of 50 entries
 - A small delay (0.5s) is added between requests to avoid rate limiting
 - Using `uv run` is recommended for faster execution and better dependency management 
